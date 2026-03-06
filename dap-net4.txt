@@ -1,0 +1,45 @@
+param maxNode := 4;
+param moduleCapacity := 1;
+
+param: Links: link_nodeA link_nodeZ link_moduleCount:= 
+1 1 2 4
+2 1 3 4
+3 2 3 2
+4 2 4 4
+5 3 4 4 
+;
+
+param: Demands: demand_nodeA demand_nodeZ, demand_volume, demand_maxPath:=
+1 1 2 3 3 
+2 1 3 4 3 
+3 1 4 2 2 
+4 2 3 2 3 
+5 2 4 3 3 
+6 3 4 4 3 
+;
+
+set DemandPath_links[1,1] := 1;
+set DemandPath_links[1,2] := 2 3;
+set DemandPath_links[1,3] := 2 4 5;
+
+set DemandPath_links[2,1] := 2;
+set DemandPath_links[2,2] := 1 3;
+set DemandPath_links[2,3] := 1 4 5;
+
+set DemandPath_links[3,1] := 1 4;
+set DemandPath_links[3,2] := 2 5;
+
+set DemandPath_links[4,1] := 3;
+set DemandPath_links[4,2] := 1 2;
+set DemandPath_links[4,3] := 4 5;
+
+set DemandPath_links[5,1] := 4;
+set DemandPath_links[5,2] := 3 5;
+set DemandPath_links[5,3] := 1 2 5;
+
+set DemandPath_links[6,1] := 5;
+set DemandPath_links[6,2] := 3 4;
+set DemandPath_links[6,3] := 1 2 4;
+
+
+
