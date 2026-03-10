@@ -1,3 +1,24 @@
+"""
+Algorytm ewolucyjny do rozwiązywania problemów projektowania sieci:
+- DAP (Delay Allocation Problem),
+- DDAP (Discrete Delay Allocation Problem).
+
+Algorytm wykorzystuje strategię ewolucyjną typu (N + K), w której:
+- N oznacza wielkość populacji,
+- K oznacza liczbę par rodziców generujących potomstwo.
+
+Każde rozwiązanie jest reprezentowane jako "chromosom" opisujący podział
+natężenia ruchu pomiędzy dostępne ścieżki dla każdego zapotrzebowania.
+
+Moduł zawiera:
+- reprezentację rozwiązania (geny i chromosomy),
+- funkcje oceny dla problemów DAP i DDAP,
+- operatory genetyczne (krzyżowanie i mutację),
+- operacje na populacji,
+- implementację głównej pętli algorytmu ewolucyjnego.
+"""
+
+
 from __future__ import annotations
 import math
 import random
@@ -10,6 +31,17 @@ Chromosome = List[List[int]]
 
 @dataclass
 class EvaluationResult:
+    """
+    Wynik oceny chromosomu
+
+    Atrybuty:
+        objective: wartość funkcji celu
+        loads: obciążenia poszczególnych krawędzi
+        overloads: wartości przeciążeń krawędzi (DAP)
+        modules: liczba modułów na krawędziach (DDAP)
+        capacities: pojemności krawędzi
+    """
+
     objective: int
     loads: List[int]
     overloads: List[int] | None = None
@@ -19,12 +51,30 @@ class EvaluationResult:
 
 @dataclass
 class Individual:
+    """
+    Pojedynczy osobnik w populacji
+
+    Atrybuty:
+        chromosome: chromosom 
+        evaluation: wynik oceny chromosomu???
+    """
     chromosome: Chromosome
     evaluation: EvaluationResult
 
 
 @dataclass
 class EAConfig:
+    """
+    Parametry algorytmu ewolucyjnego
+
+    Atrybuty:
+        population_size: liczba osobników w populacji (N)
+        offspring_pairs: liczba par rodziców (K)
+        mutation_probability: prawdopodobieństwo mutacji chromosomu (p)
+        gene_mutation_probability: prawdopodobieństwo mutacji genu (q)
+        generations: liczba generacji
+        seed:
+    """
     population_size: int = 20  # N
     offspring_pairs: int = 10  # K
     mutation_probability: float = 0.1  # p
@@ -35,23 +85,60 @@ class EAConfig:
 
 # Ogólne funkcje pomocnicze
 def create_rng(seed: int | None = None) -> random.Random:
+    """
+    Generator liczb losowych
+
+    Arguments:
+        seed:
+
+    Returns:
+        Obiekt generatora liczb losowych
+    """
     return random.Random(seed)
 
 
 def clone_chromosome(chromosome: Chromosome) -> Chromosome:
+    """
+    Kopia chromosomu
+
+    Arguments: 
+        chromosome: chromosom do skopiowania
+
+    Returns:
+        Nowy chromosom będący kopią wejściowego chromosomu
+    """
     return [gene[:] for gene in chromosome]
 
 
 def chromosome_to_string(chromosome: Chromosome) -> str:
+    """
+    Konwersja chromosomu do reprezentacji tekstowej
+
+    Arguemnts: 
+        chromosome: chromosome bitch please don't
+    
+    Returns: 
+        Tekstowa reprezentacja chromosomu
+    """
     return "[" + ", ".join(str(gene) for gene in chromosome) + "]"
 
 
 # Reprezentacja rozwiązania
 def random_gene(demand_volume: int, path_count: int, rng: random.Random) -> List[int]:
     """
-    Losowy podział całkowitego demandu na dostępne ścieżki.
-    Zwraca listę długości path_count o nieujemnych wartościach całkowitych,
-    których suma daje demand_volume.
+    Losowy podział całkowitego jednego zapotrzebowania (demand) na dostępne ścieżki.
+
+    Suma wartości w genie jest równa całkowitemu jednemu zapotrzebowaniu,
+    a każda wartość odpowiada przepływowi przepisanemu do danej ścieżki.
+
+    Arguments:
+        demand_volume: całkowite zapotrzebowanie ruchu
+        path_count: liczba dostępnych ścieżek
+        rng: generator liczb losowych
+
+    Returns:
+        Lista długości path_count o nieujemnych wartościach całkowitych, których 
+        suma daje demand_volume.
     """
     if path_count == 1:
         return [demand_volume]
@@ -67,6 +154,19 @@ def random_gene(demand_volume: int, path_count: int, rng: random.Random) -> List
 
 
 def random_chromosome(problem_data: Dict[str, Any], rng: random.Random) -> Chromosome:
+    """
+    Generowanie losowego chromosomu będącego rozwiązaniem
+
+    Każdy gen to jedno zapotrzebowanie (demand) i opisuje podział ruchu 
+    pomiędzy dostępne ścieżki
+
+    Arguments:
+        problem_data: dane danego zadania - problemu "ścieżek"
+        rng: generator liczb losowych
+
+    Returns:
+        Losowy wygenerowany chromosom
+    """
     chromosome: Chromosome = []
     for demand in problem_data["demands"]:
         chromosome.append(random_gene(demand["volume"], len(demand["paths"]), rng))
@@ -75,6 +175,16 @@ def random_chromosome(problem_data: Dict[str, Any], rng: random.Random) -> Chrom
 
 # Obliczanie obciążeń i celu
 def compute_link_loads(chromosome: Chromosome, problem_data: Dict[str, Any]) -> List[int]:
+    """
+    Obliczanie obciążeń krawędzi
+
+    Arguments:
+        chromosome: chromosom - rozwiązanie
+        problem_data: dane danego zadania - problemu "ścieżek"
+
+    Returns:
+        Lista obciążeń dla każdej krawędzi
+    """
     loads = [0 for _ in range(problem_data["num_links"])]
     for d_idx, gene in enumerate(chromosome):
         demand = problem_data["demands"][d_idx]
@@ -88,6 +198,16 @@ def compute_link_loads(chromosome: Chromosome, problem_data: Dict[str, Any]) -> 
 
 
 def evaluate_dap(chromosome: Chromosome, problem_data: Dict[str, Any]) -> EvaluationResult:
+    """
+    Obliczanie wartości funkcji celu dla problemu DAP
+
+    Arguments:
+        chromosome: -_-
+        problem_data: dane danego zadania - problemu "ścieżek"
+
+    Returns:
+        Wynik rozwiązania
+    """
     loads = compute_link_loads(chromosome, problem_data)
     capacities = problem_data["link_capacities"]
     overloads = [load - cap for load, cap in zip(loads, capacities)]
@@ -101,6 +221,16 @@ def evaluate_dap(chromosome: Chromosome, problem_data: Dict[str, Any]) -> Evalua
 
 
 def evaluate_ddap(chromosome: Chromosome, problem_data: Dict[str, Any]) -> EvaluationResult:
+    """
+    Obliczanie wartości funkcji celu dla problemu DDAP
+
+    Arguments:
+        chromosome: -_-
+        problem data: dane danego zadania - problemu "ścieżek"
+
+    Returns:
+        Wynik rozwiązania
+    """
     loads = compute_link_loads(chromosome, problem_data)
     module_capacity = problem_data["module_capacity"]
     module_costs = problem_data["link_module_costs"]
@@ -120,6 +250,17 @@ def evaluate_chromosome(
     problem_data: Dict[str, Any],
     problem_type: str,
 ) -> EvaluationResult:
+    """
+    Ocena chromosomu w zależności od typu problemu
+
+    Arguments:
+        chromosome: -_-
+        problem_data: dane danego zadania - problemu "ścieżek"
+        problem_type: typ problemu (DAP v DDAP)
+
+    Returns:
+        Wynik oceny chromosomu
+    """
     if problem_type.upper() == "DAP":
         return evaluate_dap(chromosome, problem_data)
     if problem_type.upper() == "DDAP":
@@ -130,7 +271,16 @@ def evaluate_chromosome(
 # Operatory genetyczne
 def crossover(parent_a: Chromosome, parent_b: Chromosome, rng: random.Random) -> Tuple[Chromosome, Chromosome]:
     """
-    Krzyżowanie: dla każdego genu losujemy, który potomek dziedziczy gen z którego rodzica.
+    Krzyżowanie dwóch chromosomów. Dla każdego genu losujemy, który potomek dziedziczy 
+    gen z którego rodzica
+
+    Arguments:
+        parent_a: chromosom pierwszego rodzica
+        parent_b: chormosom drugiego rodzica
+        rng: generator liczb losowych
+
+    Returns:
+        Dwa nowe chromosowy potomne
     """
     child_a: Chromosome = []
     child_b: Chromosome = []
@@ -148,8 +298,17 @@ def crossover(parent_a: Chromosome, parent_b: Chromosome, rng: random.Random) ->
 
 def mutate_gene(gene: List[int], rng: random.Random) -> List[int]:
     """
-    Mutacja genu: przesunięcie jednej jednostki przepływu z losowo wybranej
-    ścieżki o dodatnim przepływie na losowo wybraną ścieżkę.
+    Mutacja pojedynczego genu
+
+    Przesunięcie jednej jednostki przepływu z losowo wybranej ścieżki 
+    o dodatnim przepływie na losowo wybraną ścieżkę
+
+    Arguments:
+        gene:
+        rng: generator liczb losowych
+
+    Returns: 
+        Zmutowany gen
     """
     positive_paths = [idx for idx, value in enumerate(gene) if value > 0]
     if not positive_paths:
@@ -170,6 +329,21 @@ def mutate_chromosome(
     gene_mutation_probability: float,
     rng: random.Random,
 ) -> Chromosome:
+    """
+    Mutacja chromosomu
+
+    Mutacja jest wykonywana z określonym prawdopodobieństwem,
+    a następnie każdy gen może zostać zmutowany niezależnie
+
+    Arguments:
+        chromosome: chromosom do mutacji
+        mutation_probability: prawdopodobieństwo mutacji chromosomu
+        gene_mutation_probability: prawdopodobieństwo mutacji genu
+        rng: generator liczb losowych    
+
+    Returns:
+        Zmutowany chromosom   
+    """
     mutated = clone_chromosome(chromosome)
 
     if rng.random() >= mutation_probability:
@@ -220,6 +394,23 @@ def run_ea(
     problem_type: str,
     config: EAConfig,
 ) -> Dict[str, Any]:
+    """
+    Algorytm ewolucyjny.
+
+    Algorytm działa według strategii (N + K): 
+    populacja o wielkości N generuje potomstwo,
+    a następnie wybierane jest najlepsze N osobników
+    z populacji rodziców i potomstwa.
+
+    Arguments:
+        problem_data: dane danego zadania - problemu "ścieżek"
+        problem_type: typ problemu (DAP v DDAP)
+        config: konfiguracja algorytmu
+
+    Returns:
+        Słownik zawierający najlepsze znalezione rozwiązanie,
+        końcową populację oraz historię wartości funkcji celu
+    """
     rng = create_rng(config.seed)
     population = initialize_population(
         problem_data=problem_data,
