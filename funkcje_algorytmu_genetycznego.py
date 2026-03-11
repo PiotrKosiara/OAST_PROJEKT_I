@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """
 Algorytm ewolucyjny do rozwiązywania problemów projektowania sieci:
 - DAP (Delay Allocation Problem),
@@ -18,12 +20,10 @@ Moduł zawiera:
 - implementację głównej pętli algorytmu ewolucyjnego.
 """
 
-
-from __future__ import annotations
 import math
 import random
 from dataclasses import dataclass
-from typing import Dict, List, Tuple, Any
+from typing import Dict, List, Tuple, Any, Iterable, Optional
 
 
 Chromosome = List[List[int]]
@@ -82,48 +82,34 @@ class EAConfig:
     generations: int = 100
     seed: int | None = None
 
+@dataclass
+class Node:
+    """Element jednokierunkowej, uporządkowanej listy osobników."""
+    def __init__(self, individual):
+        self.individual = individual
+        self.next = None
+
 
 # Ogólne funkcje pomocnicze
+
 def create_rng(seed: int | None = None) -> random.Random:
-    """
-    Generator liczb losowych
-
-    Arguments:
-        seed:
-
-    Returns:
-        Obiekt generatora liczb losowych
-    """
+    """Generator liczb losowych."""
     return random.Random(seed)
 
 
 def clone_chromosome(chromosome: Chromosome) -> Chromosome:
-    """
-    Kopia chromosomu
-
-    Arguments: 
-        chromosome: chromosom do skopiowania
-
-    Returns:
-        Nowy chromosom będący kopią wejściowego chromosomu
-    """
+    """Kopia chromosomu."""
     return [gene[:] for gene in chromosome]
 
 
 def chromosome_to_string(chromosome: Chromosome) -> str:
-    """
-    Konwersja chromosomu do reprezentacji tekstowej
-
-    Arguemnts: 
-        chromosome: chromosome bitch please don't
-    
-    Returns: 
-        Tekstowa reprezentacja chromosomu
-    """
+    """Konwersja chromosomu do reprezentacji tekstowej."""
     return "[" + ", ".join(str(gene) for gene in chromosome) + "]"
 
-
+# =========================
 # Reprezentacja rozwiązania
+# =========================
+
 def random_gene(demand_volume: int, path_count: int, rng: random.Random) -> List[int]:
     """
     Losowy podział całkowitego jednego zapotrzebowania (demand) na dostępne ścieżki.
@@ -146,9 +132,11 @@ def random_gene(demand_volume: int, path_count: int, rng: random.Random) -> List
     cuts = sorted(rng.randint(0, demand_volume) for _ in range(path_count - 1))
     values: List[int] = []
     prev = 0
+
     for cut in cuts:
         values.append(cut - prev)
         prev = cut
+
     values.append(demand_volume - prev)
     return values
 
@@ -172,8 +160,10 @@ def random_chromosome(problem_data: Dict[str, Any], rng: random.Random) -> Chrom
         chromosome.append(random_gene(demand["volume"], len(demand["paths"]), rng))
     return chromosome
 
-
+# ==========================
 # Obliczanie obciążeń i celu
+# ==========================
+
 def compute_link_loads(chromosome: Chromosome, problem_data: Dict[str, Any]) -> List[int]:
     """
     Obliczanie obciążeń krawędzi
@@ -267,8 +257,10 @@ def evaluate_chromosome(
         return evaluate_ddap(chromosome, problem_data)
     raise ValueError(f"Nieznany typ problemu: {problem_type}")
 
-
+# ====================
 # Operatory genetyczne
+# ====================
+
 def crossover(parent_a: Chromosome, parent_b: Chromosome, rng: random.Random) -> Tuple[Chromosome, Chromosome]:
     """
     Krzyżowanie dwóch chromosomów. Dla każdego genu losujemy, który potomek dziedziczy 
@@ -355,40 +347,128 @@ def mutate_chromosome(
 
     return mutated
 
-
+# ====================
 # Populacja i selekcja
+# ====================
+
 def individual_key(individual: Individual) -> Tuple[int, str]:
+    """
+    Klucz porządkujący osobników.
+
+    Najpierw porównywane są wartość funkcji celu, a potem tekstową postać
+    chromosomu.
+    """
     return individual.evaluation.objective, chromosome_to_string(individual.chromosome)
 
+def iterate_population(head: Optional[Node]) -> Iterable[Individual]:
+    """Iteacja po osobnikach zapisanych w linked list."""
+    current = head
+    while current is not None:
+        yield current.individual
+        current = current.next
 
-def sort_population(population: List[Individual]) -> List[Individual]:
-    return sorted(population, key=individual_key)
+def population_size(head: Optional[Node]) -> int:
+    """Zwraca liczbę osobników w populacji."""
+    return sum(1 for _ in iterate_population(head))
 
+
+def population_objective_sum(head: Optional[Node]) -> int:
+    """Zwraca sumę wartości funkcji celu w populacji."""
+    return sum(ind.evaluation.objective for ind in iterate_population(head))
+
+
+def get_random_individual(head: Optional[Node], rng: random.Random) -> Individual:
+    """Losuje jednego osobnika z linked list."""
+    size = population_size(head)
+
+    chosen_index = rng.randrange(size)
+    for index, individual in enumerate(iterate_population(head)):
+        if index == chosen_index:
+            return individual
+
+
+def insert_sorted(head: Optional[Node], individual: Individual) -> Node:
+    """
+    Wstawia osobnika do uporządkowanej linked list.
+
+    Lista jest uporządkowana rosnąco względem wartości funkcji celu.
+    """
+    new_node = Node(individual=individual)
+
+    if head is None or individual_key(individual) < individual_key(head.individual):
+        new_node.next = head
+        return new_node
+
+    current = head
+    while current.next is not None and individual_key(current.next.individual) < individual_key(individual):
+        current = current.next
+
+    new_node.next = current.next
+    current.next = new_node
+    return head
+
+
+def merge_best_n(head_a: Optional[Node], head_b: Optional[Node], n: int) -> Optional[Node]:
+    """Scala dwie już uporządkowane populacje i zwraca pierwsze n najlepszych osobników."""
+    if n <= 0:
+        return None
+
+    result_head: Optional[Node] = None
+    result_tail: Optional[Node] = None
+    added = 0
+
+    a = head_a
+    b = head_b
+
+    while added < n and (a is not None or b is not None):
+        if b is None or (a is not None and individual_key(a.individual) <= individual_key(b.individual)):
+            chosen = a.individual
+            a = a.next if a is not None else None
+        else:
+            chosen = b.individual
+            b = b.next if b is not None else None
+
+        new_node = Node(individual=chosen)
+        if result_head is None:
+            result_head = new_node
+            result_tail = new_node
+        else:
+            result_tail.next = new_node
+            result_tail = new_node
+
+        added += 1
+
+    return result_head
+
+
+# ======================================
+# Inicjalizacja Główny algorytm EA (N+K)
+# ======================================
 
 def initialize_population(
     problem_data: Dict[str, Any],
     problem_type: str,
     population_size: int,
     rng: random.Random,
-) -> List[Individual]:
-    population: List[Individual] = []
+):
+    head = None
+
     for _ in range(population_size):
         chromosome = random_chromosome(problem_data, rng)
-        evaluation = evaluate_chromosome(chromosome, problem_data, problem_type)
-        population.append(Individual(chromosome=chromosome, evaluation=evaluation))
-    return sort_population(population)
+        evaluation = evaluate_chromosome(
+            chromosome,
+            problem_data,
+            problem_type,
+        )
+        individual = Individual(
+            chromosome=chromosome,
+            evaluation=evaluation
+        )
 
+        head = insert_sorted(head, individual)
 
-def select_best_n(population: List[Individual], n: int) -> List[Individual]:
-    ordered = sort_population(population)
-    return ordered[:n]
+    return head
 
-
-def select_parents_random(population: List[Individual], rng: random.Random) -> Tuple[Individual, Individual]:
-    return rng.choice(population), rng.choice(population)
-
-
-# Główny algorytm EA (N+K)
 def run_ea(
     problem_data: Dict[str, Any],
     problem_type: str,
@@ -410,6 +490,12 @@ def run_ea(
     Returns:
         Słownik zawierający najlepsze znalezione rozwiązanie,
         końcową populację oraz historię wartości funkcji celu
+
+    W każdej generacji:
+    1. losujemy pary rodziców z populacji P(n),
+    2. tworzymy potomstwo O,
+    3. łączymy P(n) i O,
+    4. zostawiamy N najlepszych osobników.
     """
     rng = create_rng(config.seed)
     population = initialize_population(
@@ -419,15 +505,18 @@ def run_ea(
         rng=rng,
     )
 
-    best_history = [population[0].evaluation.objective]
-    avg_history = [sum(ind.evaluation.objective for ind in population) / len(population)]
-    # Kryterium stopu (ustalona liczba generacji)
-    # kryterium stopu = osiągnięcie config.generations iteracji pętli
+    best_history = [population.individual.evaluation.objective]
+    avg_history = [
+        population_objective_sum(population) /
+        population_size(population)
+    ]
+   
     for _generation in range(config.generations):
-        offspring: List[Individual] = []
+        offspring = None
 
         for _ in range(config.offspring_pairs):
-            parent_a, parent_b = select_parents_random(population, rng)
+            parent_a = get_random_individual(population, rng)
+            parent_b = get_random_individual(population, rng)
             child_a, child_b = crossover(parent_a.chromosome, parent_b.chromosome, rng)
 
             child_a = mutate_chromosome(
@@ -443,24 +532,34 @@ def run_ea(
                 rng,
             )
 
-            offspring.append(
+            offspring = insert_sorted(
+                offspring,
                 Individual(
                     chromosome=child_a,
-                    evaluation=evaluate_chromosome(child_a, problem_data, problem_type),
+                    evaluation=evaluate_chromosome(child_a, problem_data, problem_type)
                 )
             )
-            offspring.append(
+
+            offspring = insert_sorted(
+                offspring,
                 Individual(
                     chromosome=child_b,
-                    evaluation=evaluate_chromosome(child_b, problem_data, problem_type),
+                    evaluation=evaluate_chromosome(child_b, problem_data, problem_type)
                 )
             )
+            
+        population = merge_best_n(
+            population,
+            offspring,
+            config.population_size
+        )
+        best_history.append(population.individual.evaluation.objective)
+        avg_history = [
+            population_objective_sum(population) /
+            population_size(population)
+        ]
 
-        population = select_best_n(population + offspring, config.population_size)
-        best_history.append(population[0].evaluation.objective)
-        avg_history.append(sum(ind.evaluation.objective for ind in population) / len(population))
-
-    best = population[0]
+    best = population.individual
     return {
         "best_individual": best,
         "population": population,
@@ -470,8 +569,10 @@ def run_ea(
         "problem_type": problem_type,
     }
 
-
+# ====================
 # Formatowanie wyników
+# ====================
+
 def format_solution(best: Individual, problem_type: str) -> str:
     lines: List[str] = []
     lines.append(f"Funkcja celu: {best.evaluation.objective}")
