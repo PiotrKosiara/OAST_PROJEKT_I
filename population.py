@@ -1,5 +1,5 @@
 import random
-from typing import Iterable, Optional, Tuple
+from typing import Iterable, Optional, Tuple, List
 
 from models import Individual, Node, Chromosome
 
@@ -98,3 +98,81 @@ def merge_best_n(head_a: Optional[Node], head_b: Optional[Node], n: int) -> Opti
     return result_head
 
 
+def population_to_list(head: Optional[Node]) -> List[Individual]:
+    """Zamienia uporządkowaną linked listę populacji na zwykłą listę."""
+    return list(iterate_population(head))
+
+
+def build_pd13_probabilities(population_list: List[Individual]) -> List[float]:
+    """
+    Buduwanie rozkładu p(n).
+
+    Dla populacji y(1),...,y(N) uporządkowanej niemalejąco względem F(y):
+        F* = max F(y(n))
+        S = sum(F* + 1 - F(y(n)))
+        p(n) = (F* + 1 - F(y(n))) / S
+    """
+    if not population_list:
+        raise ValueError("Populacja nie może być pusta.")
+
+    objectives = [ind.evaluation.objective for ind in population_list]
+    f_star = max(objectives)
+    weights = [f_star + 1 - value for value in objectives]
+    s = sum(weights)
+
+    return [weight / s for weight in weights]
+
+
+def choose_individual_by_probability(
+    population_list: List[Individual],
+    probabilities: List[float],
+    rng: random.Random,
+) -> Individual:
+    """Losuje osobnika zgodnie z zadanym rozkładem prawdopodobieństwa."""
+    r = rng.random()
+    cumulative = 0.0
+
+    for individual, probability in zip(population_list, probabilities):
+        cumulative += probability
+        if r <= cumulative:
+            return individual
+
+    return population_list[-1]
+
+def select_parent_pair(
+    population: Optional[Node],
+    method: str,
+    rng: random.Random,
+) -> Tuple[Individual, Individual]:
+    """
+    Wybór pary rodziców do krzyżowania.
+
+    Metody:
+    - random_random : obaj rodzice losowo z populacji
+    - best_pn       : pierwszy rodzic = najlepszy, drugi wg p(n)
+    - pn_pn         : obaj rodzice wg p(n)
+    """
+    population_list = population_to_list(population)
+
+    if not population_list:
+        raise ValueError("Nie można wybrać rodziców z pustej populacji.")
+
+    if method == "random_random":
+        return rng.choice(population_list), rng.choice(population_list)
+
+    probabilities = build_pd13_probabilities(population_list)
+
+    if method == "best_pn":
+        return population_list[0], choose_individual_by_probability(
+            population_list,
+            probabilities,
+            rng,
+        )
+
+    if method == "pn_pn":
+        return (
+            choose_individual_by_probability(population_list, probabilities, rng),
+            choose_individual_by_probability(population_list, probabilities, rng),
+        )
+
+    raise ValueError(f"Nieznana metoda doboru rodziców: {method}")

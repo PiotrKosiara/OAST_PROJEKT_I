@@ -53,12 +53,17 @@ class EAConfig:
         generations: liczba generacji
         seed:
     """
-    population_size: int = 20  # N
-    offspring_pairs: int = 10  # K
-    mutation_probability: float = 0.1  # p
-    gene_mutation_probability: float = 0.1  # q
+    population_size: int = 20
+    offspring_pairs: int = 10
+    mutation_probability: float = 0.1
+    gene_mutation_probability: float = 0.1
     generations: int = 100
     seed: int | None = None
+
+    parent_selection_method: str = "random_random"
+    # "random_random"  -> obaj rodzice losowo
+    # "best_pn"        -> pierwszy najlepszy, drugi wg p(n)
+    # "pn_pn"          -> obaj wg p(n)
 
 @dataclass
 class Node:

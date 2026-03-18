@@ -27,13 +27,12 @@ from evaluation import evaluate_chromosome
 from models import Chromosome, EAConfig, Individual
 from operators import crossover, mutate_chromosome
 from population import (
-    get_random_individual,
     insert_sorted,
     merge_best_n,
     population_objective_sum,
     population_size,
+    select_parent_pair,
 )
-
 
 def create_rng(seed: int | None = None) -> random.Random:
     """Generator liczb losowych."""
@@ -160,8 +159,11 @@ def run_ea(
         offspring = None
 
         for _ in range(config.offspring_pairs):
-            parent_a = get_random_individual(population, rng)
-            parent_b = get_random_individual(population, rng)
+            parent_a, parent_b = select_parent_pair(
+                population,
+                config.parent_selection_method,
+                rng,
+            )
             child_a, child_b = crossover(parent_a.chromosome, parent_b.chromosome, rng)
 
             child_a = mutate_chromosome(

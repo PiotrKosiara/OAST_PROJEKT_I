@@ -1,0 +1,36 @@
+================================================================================
+Porównanie metod doboru rodziców - DAP
+Plik danych: C:\Users\Emilia\Desktop\OAST\OAST_PROJEKT_I\dap-net4.txt
+Liczba węzłów: 4
+Liczba łączy: 5
+Liczba żądań: 6
+Pojemność modułu: 1
+
+Dokładne optimum brute force: 1
+
+Metoda: losowo-losowo (random_random)
+  liczba uruchomień: 100
+  średni wynik końcowy: 2.6700
+  mediana wyniku końcowego: 3.0000
+  odchylenie standardowe: 0.6333
+  min wynik końcowy: 1.0000
+  max wynik końcowy: 4.0000
+  liczba trafień optimum: 1/100
+
+Metoda: najlepszy-p(n) (best_pn)
+  liczba uruchomień: 100
+  średni wynik końcowy: 3.1600
+  mediana wyniku końcowego: 3.0000
+  odchylenie standardowe: 0.6280
+  min wynik końcowy: 2.0000
+  max wynik końcowy: 5.0000
+  liczba trafień optimum: 0/100
+
+Metoda: p(n)-p(n) (pn_pn)
+  liczba uruchomień: 100
+  średni wynik końcowy: 2.8100
+  mediana wyniku końcowego: 3.0000
+  odchylenie standardowe: 0.6434
+  min wynik końcowy: 2.0000
+  max wynik końcowy: 5.0000
+  liczba trafień optimum: 0/100

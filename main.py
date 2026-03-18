@@ -36,7 +36,11 @@ def run_single_experiment(problem_type: str, data_path: Path, output_plot: Path)
         mutation_probability=0.1,
         gene_mutation_probability=0.1,
         generations=100,
-        # seed=404,
+        parent_selection_method="pn_pn",
+        seed=404,
+        # "random_random"  -> obaj rodzice losowo
+        # "best_pn"        -> pierwszy najlepszy, drugi wg p(n)
+        # "pn_pn"          -> obaj wg p(n)
     )
 
     result = run_ea(problem_data=problem_data, problem_type=problem_type, config=config)
@@ -64,13 +68,13 @@ def main():
     run_single_experiment(
         problem_type="DAP",
         data_path=DIR / "dap-net4.txt",
-        output_plot=DIR / "trajektoria_dap.png",
+        output_plot=DIR / "trajektoria_dap_pn.png",
     )
 
     run_single_experiment(
         problem_type="DDAP",
         data_path=DIR / "ddap-net4.txt",
-        output_plot=DIR / "trajektoria_ddap.png",
+        output_plot=DIR / "trajektoria_ddap_pn.png",
     )
 
 
