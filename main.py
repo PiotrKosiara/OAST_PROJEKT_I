@@ -1,6 +1,9 @@
 from __future__ import annotations
 from pathlib import Path
-from funkcje_algorytmu_genetycznego import EAConfig, format_solution, run_ea, evaluate_dap, evaluate_ddap
+from ea import run_ea, format_solution
+from models import EAConfig
+from evaluation import evaluate_dap, evaluate_ddap
+# from funkcje_algorytmu_genetycznego import EAConfig, format_solution, run_ea, evaluate_dap, evaluate_ddap
 from funkcje_generujące_dane_i_wykresy_do_sprawozdania import (
     parse_dap_file,
     parse_ddap_file,
@@ -33,7 +36,7 @@ def run_single_experiment(problem_type: str, data_path: Path, output_plot: Path)
         mutation_probability=0.1,
         gene_mutation_probability=0.1,
         generations=100,
-        seed=42,
+        # seed=404,
     )
 
     result = run_ea(problem_data=problem_data, problem_type=problem_type, config=config)

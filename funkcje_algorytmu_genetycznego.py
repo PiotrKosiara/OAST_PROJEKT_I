@@ -554,10 +554,10 @@ def run_ea(
             config.population_size
         )
         best_history.append(population.individual.evaluation.objective)
-        avg_history = [
-            population_objective_sum(population) /
-            population_size(population)
-        ]
+        avg_history.append(
+            population_objective_sum(population) / population_size(population)
+        )
+
 
     best = population.individual
     return {
