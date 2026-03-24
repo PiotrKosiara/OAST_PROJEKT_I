@@ -8,24 +8,24 @@ Pojemność modułu: 10
 
 Metoda: losowo-losowo (random_random)
   liczba uruchomień: 100
-  średni wynik końcowy: 219.2200
-  mediana wyniku końcowego: 219.0000
-  odchylenie standardowe: 4.3556
-  min wynik końcowy: 208.0000
-  max wynik końcowy: 233.0000
+  średni wynik końcowy: 74.5900
+  mediana wyniku końcowego: 75.0000
+  odchylenie standardowe: 4.4274
+  min wynik końcowy: 62.0000
+  max wynik końcowy: 84.0000
 
 Metoda: najlepszy-p(n) (best_pn)
   liczba uruchomień: 100
-  średni wynik końcowy: 250.7900
-  mediana wyniku końcowego: 251.0000
-  odchylenie standardowe: 7.0090
-  min wynik końcowy: 236.0000
-  max wynik końcowy: 274.0000
+  średni wynik końcowy: 100.4300
+  mediana wyniku końcowego: 101.0000
+  odchylenie standardowe: 5.7258
+  min wynik końcowy: 86.0000
+  max wynik końcowy: 114.0000
 
 Metoda: p(n)-p(n) (pn_pn)
   liczba uruchomień: 100
-  średni wynik końcowy: 228.4200
-  mediana wyniku końcowego: 228.0000
-  odchylenie standardowe: 5.4958
-  min wynik końcowy: 215.0000
-  max wynik końcowy: 244.0000
+  średni wynik końcowy: 83.6600
+  mediana wyniku końcowego: 84.0000
+  odchylenie standardowe: 4.9663
+  min wynik końcowy: 74.0000
+  max wynik końcowy: 95.0000
