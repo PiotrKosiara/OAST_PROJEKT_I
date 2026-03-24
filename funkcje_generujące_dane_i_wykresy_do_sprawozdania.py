@@ -52,14 +52,14 @@ def parse_dap_file(file_path: str | Path) -> Dict[str, Any]:
                 "id": int(parts[0]),
                 "source": int(parts[1]),
                 "target": int(parts[2]),
-                "volume": int(parts[3]),
-                "max_paths": int(parts[4]),
+                "volume": int(parts[4]), #na odwrot w nowych plikach
+                "max_paths": int(parts[3]), #na odwrot w nowych plikach
                 "paths": [],
             }
         )
 
     path_matches = re.findall(
-        r"set\s+DemandPath_links\[(\d+),(\d+)\]\s*:=\s*(.*?)\s*;",
+        r"set\s+DemandPath_links\[\s*(\d+)\s*,\s*(\d+)\s*\]\s*:=\s*(.*?)\s*;", #regex uwzgledniajacy spacje w nawiasach
         text,
         re.MULTILINE | re.DOTALL,
     )
@@ -120,14 +120,14 @@ def parse_ddap_file(file_path: str | Path) -> Dict[str, Any]:
                 "id": int(parts[0]),
                 "source": int(parts[1]),
                 "target": int(parts[2]),
-                "volume": int(parts[3]),
-                "max_paths": int(parts[4]),
+                "volume": int(parts[4]), #na odwrot w nowych plikach
+                "max_paths": int(parts[3]), #na odwrot w nowych plikach
                 "paths": [],
             }
         )
 
     path_matches = re.findall(
-        r"set\s+Demand_pathLinks\[(\d+),(\d+)\]\s*:=\s*(.*?)\s*;",
+        r"set\s+Demand_pathLinks\[\s*(\d+)\s*,\s*(\d+)\s*\]\s*:=\s*(.*?)\s*;", #regex uwzgledniajacy spacje w nawiasach
         text,
         re.MULTILINE | re.DOTALL,
     )
