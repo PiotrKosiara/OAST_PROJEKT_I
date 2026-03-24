@@ -228,7 +228,7 @@ def format_comparison_summary(
     data_path: str | Path,
     problem_data: Dict[str, Any],
     method_results: List[Dict[str, Any]],
-    exact_result: Dict[str, Any] | None = None,
+    #exact_result: Dict[str, Any] | None = None,
 ) -> str:
     lines: List[str] = []
     lines.append("=" * 80)
@@ -237,11 +237,11 @@ def format_comparison_summary(
     lines.append(summarize_instance(problem_data))
     lines.append("")
 
-    exact_objective = None
-    if exact_result is not None and exact_result.get("best_evaluation") is not None:
-        exact_objective = exact_result["best_evaluation"].objective
-        lines.append(f"Dokładne optimum brute force: {exact_objective}")
-        lines.append("")
+    # exact_objective = None
+    # if exact_result is not None and exact_result.get("best_evaluation") is not None:
+    #     exact_objective = exact_result["best_evaluation"].objective
+    #     lines.append(f"Dokładne optimum brute force: {exact_objective}")
+    #     lines.append("")
 
     for method_result in method_results:
         values = np.asarray(method_result["final_objectives"], dtype=float)
@@ -254,9 +254,9 @@ def format_comparison_summary(
         lines.append(f"  min wynik końcowy: {values.min():.4f}")
         lines.append(f"  max wynik końcowy: {values.max():.4f}")
 
-        if exact_objective is not None:
-            hit_count = int(np.sum(values == exact_objective))
-            lines.append(f"  liczba trafień optimum: {hit_count}/{len(values)}")
+        # if exact_objective is not None:
+        #     hit_count = int(np.sum(values == exact_objective))
+        #     lines.append(f"  liczba trafień optimum: {hit_count}/{len(values)}")
 
         lines.append("")
 
@@ -287,7 +287,8 @@ def run_comparison_and_save(
     output_dir.mkdir(parents=True, exist_ok=True)
 
     problem_data = load_problem_data(problem_type, data_path)
-    exact_result = get_exact_result(problem_type, problem_data)
+    #exact_result = get_exact_result(problem_type, problem_data)
+    exact_result = 'None'
 
     method_results: List[Dict[str, Any]] = []
     for method in methods:
@@ -317,14 +318,14 @@ def run_comparison_and_save(
         data_path=data_path,
         problem_data=problem_data,
         method_results=method_results,
-        exact_result=exact_result,
+        #exact_result=exact_result,
     )
     save_text_report(report_text, report_path)
 
     return {
         "problem_type": problem_type,
         "problem_data": problem_data,
-        "exact_result": exact_result,
+        #"exact_result": exact_result,
         "method_results": method_results,
         "best_plot_paths": plot_paths["best_plot_paths"],
         "avg_plot_paths": plot_paths["avg_plot_paths"],
