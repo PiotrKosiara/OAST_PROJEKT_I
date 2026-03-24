@@ -40,7 +40,7 @@ def parse_dap_file(file_path: str | Path) -> Dict[str, Any]:
         parts = line.split()
         if not parts:
             continue
-        link_capacities.append(int(parts[3]))
+        link_capacities.append(int(parts[3]) * module_capacity) # MNOZENIE PRZEZ WARTOŚĆ MODULE_CAPACITY!!!!!
 
     demands: List[Dict[str, Any]] = []
     for line in demands_block.strip().splitlines():
