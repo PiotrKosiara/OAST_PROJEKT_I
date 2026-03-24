@@ -1,0 +1,31 @@
+================================================================================
+Porównanie metod doboru rodziców - DDAP
+Plik danych: D:\StudiaMgr\OAST\Repo-OAST\ddap-net12-26L.txt
+Liczba węzłów: 12
+Liczba łączy: 18
+Liczba żądań: 66
+Pojemność modułu: 10
+
+Metoda: losowo-losowo (random_random)
+  liczba uruchomień: 100
+  średni wynik końcowy: 364.4400
+  mediana wyniku końcowego: 364.0000
+  odchylenie standardowe: 4.7102
+  min wynik końcowy: 353.0000
+  max wynik końcowy: 375.0000
+
+Metoda: najlepszy-p(n) (best_pn)
+  liczba uruchomień: 100
+  średni wynik końcowy: 406.3000
+  mediana wyniku końcowego: 406.0000
+  odchylenie standardowe: 4.8549
+  min wynik końcowy: 395.0000
+  max wynik końcowy: 417.0000
+
+Metoda: p(n)-p(n) (pn_pn)
+  liczba uruchomień: 100
+  średni wynik końcowy: 376.4400
+  mediana wyniku końcowego: 377.0000
+  odchylenie standardowe: 4.6868
+  min wynik końcowy: 366.0000
+  max wynik końcowy: 389.0000
